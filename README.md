@@ -1,6 +1,6 @@
 # Blink 🤖🎧
 
-**Yerel Çalışan Yapay Zekâ Destekli Sesli Asistan**
+**Yapay Zekâ Destekli Kişiselleştirilmiş Sesli Asistan**
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge\&logo=python\&logoColor=white)
 ![AI](https://img.shields.io/badge/Gemini-AI-orange?style=for-the-badge)
