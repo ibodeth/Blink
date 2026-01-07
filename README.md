@@ -16,7 +16,7 @@
 
 ### 🧠 Yapay Zekâ
 
-* Google **Gemini API** ile doğal dil anlama
+* Google **Gemini 3 Flash** ile doğal dil anlama
 * Bağlam farkındalığı (önceki konuşmaları referans alır)
 * JSON tabanlı görev ayrıştırma
 
