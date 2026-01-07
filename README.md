@@ -7,7 +7,7 @@
 ![Voice](https://img.shields.io/badge/Voice%20Assistant-Yes-success?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
 
-**Blink**, masaüstünde çalışan, **sesli komut algılayabilen**, **yapay zekâ destekli**, **müzik oynatabilen**, **hatırlatıcı kurabilen**, **uygulama açıp kapatabilen** gelişmiş bir **kişisel asistan** uygulamasıdır.
+**Blink**, masaüstünde çalışan, **sesli komut algılayabilen**, **yapay zekâ destekli**, **müzik oynatabilen**, **hatırlatıcı kurabilen**, **uygulama açıp kapatabilen** gelişmiş bir **kişisel asistan** uygulamasıdır.Blink diye seslendiğin an seni dinlemeye başlar.
 
 
 ---
@@ -22,7 +22,7 @@
 
 ### 🎙️ Sesli Asistan
 
-* **Wake Word** (Picovoice Porcupine)
+* **Wake Word** Blink dersen seni dinlemeye başlar (Picovoice Porcupine)
 * Türkçe konuşma algılama
 * Gerçek zamanlı ses görselleştirici
 * Türkçe doğal TTS (Edge TTS)
