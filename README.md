@@ -9,7 +9,6 @@
 
 **Blink**, masaüstünde çalışan, **sesli komut algılayabilen**, **yapay zekâ destekli**, **müzik oynatabilen**, **hatırlatıcı kurabilen**, **uygulama açıp kapatabilen** gelişmiş bir **kişisel asistan** uygulamasıdır.
 
-Tamamen **lokal çalışır**, sadece gerekli servisler (Gemini, hava durumu, YouTube) için internete çıkar.
 
 ---
 
