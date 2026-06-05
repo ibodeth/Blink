@@ -1,0 +1,11 @@
+PyQt5
+pvporcupine
+PyAudio
+SpeechRecognition
+edge-tts
+google-genai
+AppOpener
+pygame
+yt-dlp
+requests
+psutil

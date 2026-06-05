@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  blink:
+    build: .
+    container_name: blink
+    volumes:
+      - .:/app
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+      - QT_QPA_PLATFORM=xcb
+    devices:
+      - "/dev/snd:/dev/snd" # Map sound hardware for pyaudio
+    privileged: true
+    restart: unless-stopped

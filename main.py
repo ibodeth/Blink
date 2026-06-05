@@ -40,7 +40,7 @@ def log_debug(msg):
     print(f"\033[96m[DEBUG] {datetime.now().strftime('%H:%M:%S')} -> {msg}\033[0m")
 
 # ==========================================================
-# 🔑 KONFİGÜRASYON
+# 🔑 CONFIGURATION
 # ==========================================================
 CONFIG_FILE = "blink_keys.json"
 KEYS = {}
@@ -60,7 +60,7 @@ def save_keys_to_disk(g_key, p_key):
     with open(CONFIG_FILE, "w") as f: json.dump(KEYS, f)
 
 # ==========================================================
-# 1. YARDIMCI SINIFLAR
+# 1. HELPER CLASSES
 # ==========================================================
 class ContextManager:
     def __init__(self):
@@ -78,7 +78,7 @@ class FFmpegManager:
             threading.Thread(target=self.download).start()
         else: self.add_path()
     def download(self):
-        log_debug("FFmpeg indiriliyor...")
+        log_debug("Downloading FFmpeg...")
         try:
             url = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
             with open("ffmpeg.zip", 'wb') as f: shutil.copyfileobj(requests.get(url, stream=True).raw, f)
@@ -86,8 +86,8 @@ class FFmpegManager:
             for r, d, f in os.walk("temp_ff"):
                 if "bin" in d: shutil.move(r, os.path.join(os.getcwd(), "ffmpeg")); break
             shutil.rmtree("temp_ff"); os.remove("ffmpeg.zip"); self.add_path()
-            log_debug("FFmpeg kuruldu.")
-        except Exception as e: log_debug(f"FFmpeg hatası: {e}")
+            log_debug("FFmpeg installed.")
+        except Exception as e: log_debug(f"FFmpeg error: {e}")
     def add_path(self):
         if self.bin_path not in os.environ["PATH"]: os.environ["PATH"] += os.pathsep + self.bin_path
 
@@ -102,13 +102,13 @@ class MusicDownloader(QThread):
 
     def run(self):
         try:
-            self.progress.emit(f"Aranıyor: {self.query}...")
+            self.progress.emit(f"Searching: {self.query}...")
             def progress_hook(d):
                 if d['status'] == 'downloading':
                     p = d.get('_percent_str', '0%').replace('%','')
-                    self.progress.emit(f"İndiriliyor: %{p}")
+                    self.progress.emit(f"Downloading: {p}%")
                 elif d['status'] == 'finished':
-                    self.progress.emit("İşleniyor...")
+                    self.progress.emit("Processing...")
 
             ydl_opts = {
                 'format': 'bestaudio/best', 
@@ -133,7 +133,7 @@ class MusicDownloader(QThread):
 class MusicEngine:
     def __init__(self):
         try: pygame.mixer.init()
-        except: log_debug("Pygame Mixer Başlatılamadı!")
+        except: log_debug("Failed to initialize Pygame Mixer!")
         self.current_file = os.path.abspath("temp_song.mp3")
         self.is_paused = False
 
@@ -143,24 +143,24 @@ class MusicEngine:
     def play_file(self):
         if os.path.exists(self.current_file):
             pygame.mixer.music.load(self.current_file); pygame.mixer.music.play()
-            self.is_paused = False; log_debug("Müzik çalıyor."); return True
+            self.is_paused = False; log_debug("Music is playing."); return True
         return False
 
     def seek(self, seconds):
         try:
             if os.path.exists(self.current_file):
-                pygame.mixer.music.play(start=seconds); log_debug(f"Müzik sarıldı: {seconds}")
+                pygame.mixer.music.play(start=seconds); log_debug(f"Music seeked: {seconds}")
         except: pass
 
     def toggle_pause(self):
         if self.is_paused: 
             pygame.mixer.music.unpause()
             self.is_paused = False
-            return "Devam Ediyor"
+            return "Resumed"
         else: 
             pygame.mixer.music.pause()
             self.is_paused = True
-            return "Duraklatıldı"
+            return "Paused"
 
     def stop(self):
         try: pygame.mixer.music.stop(); pygame.mixer.music.unload()
@@ -184,7 +184,7 @@ class MemoryManager:
         ts = time.time()
         self.c.execute("INSERT OR REPLACE INTO memory VALUES (?, ?, ?, ?)", (key.lower(), val, category, ts))
         self.c.commit()
-        log_debug(f"Hafıza Kayıt [{category}]: {key} -> {val}")
+        log_debug(f"Memory Save [{category}]: {key} -> {val}")
 
     def get_relevant_memories(self):
         now = time.time()
@@ -195,15 +195,15 @@ class MemoryManager:
             if cat == "events" and (now - ts) > 604800: continue
             
             date_str = datetime.fromtimestamp(ts).strftime("%Y-%m-%d")
-            memories.append(f"- [{cat.upper()}] {k}: {v} (Tarih: {date_str})")
-        return "\n".join(memories) if memories else "Henüz özel bir bilgi yok."
+            memories.append(f"- [{cat.upper()}] {k}: {v} (Date: {date_str})")
+        return "\n".join(memories) if memories else "No custom info yet."
 
     def get_value(self, key):
         r = self.c.execute("SELECT val FROM memory WHERE key=?", (key.lower(),)).fetchone()
         return r[0] if r else None
 
 # ==========================================================
-# 6. SİSTEM YÖNETİCİSİ 
+# 6. SYSTEM MANAGER
 # ==========================================================
 class SystemManager:
     def __init__(self):
@@ -217,43 +217,43 @@ class SystemManager:
         try:
             result = subprocess.check_output("py --list", shell=True).decode("utf-8")
             versions = [line.strip() for line in result.split('\n') if line.strip()]
-            return "Yüklü Python Sürümleri: " + ", ".join(versions)
+            return "Installed Python Versions: " + ", ".join(versions)
         except:
-            return "Python sürümleri alınamadı."
+            return "Failed to retrieve Python versions."
 
     def execute(self, act, trg):
-        log_debug(f"Sistem İşlemi: {act} -> {trg}")
-        if not trg: return "Hedef belirtilmedi."
+        log_debug(f"System Action: {act} -> {trg}")
+        if not trg: return "No target specified."
         
         if act == "open":
             if "arduino" in trg.lower(): trg = "Arduino IDE"
 
             system_map = {
-                "ayarlar": "start ms-settings:",
-                "not defteri": "start notepad",
-                "hesap makinesi": "start calc",
-                "görev yöneticisi": "start taskmgr",
+                "settings": "start ms-settings:",
+                "notepad": "start notepad",
+                "calculator": "start calc",
+                "task manager": "start taskmgr",
                 "cmd": "start cmd",
-                "dosya gezgini": "start explorer"
+                "file explorer": "start explorer"
             }
             for key, cmd in system_map.items():
                 if key in trg.lower():
-                    subprocess.Popen(cmd, shell=True); return f"{key.title()} açıldı."
+                    subprocess.Popen(cmd, shell=True); return f"{key.title()} opened."
 
             try:
                 app_open(trg, match_closest=True, output=True, throw_error=True)
-                return f"{trg} açılıyor..."
+                return f"{trg} opening..."
             except: pass 
 
             try:
                 os.startfile(trg) 
-                return f"{trg} başlatıldı."
+                return f"{trg} started."
             except FileNotFoundError:
                 try:
                     subprocess.Popen(f'start "" "{trg}"', shell=True)
-                    return f"{trg} başlatıldı."
-                except: return f"BULUNAMADI: {trg}"
-            except Exception as e: return f"BULUNAMADI: {trg}"
+                    return f"{trg} started."
+                except: return f"NOT FOUND: {trg}"
+            except Exception as e: return f"NOT FOUND: {trg}"
 
         if act == "close":
             killed = False
@@ -261,10 +261,10 @@ class SystemManager:
                 if p.info['name'] and trg.lower() in p.info['name'].lower(): 
                     try: p.terminate(); killed = True
                     except: pass
-            return "Kapatıldı." if killed else "Açık değil."
+            return "Closed." if killed else "Not running."
 
 # ==========================================================
-# 2. GÖRSELLEŞTİRİCİ
+# 2. VISUALIZER
 # ==========================================================
 class SiriVisualizerWidget(QWidget):
     def __init__(self, parent=None):
@@ -312,7 +312,7 @@ class BackendWorker(QThread):
         self.ctx = ContextManager()
         self.downloader = None 
         try: self.ai = genai.Client(api_key=KEYS["GEMINI"])
-        except: log_debug("Gemini Key Hatalı!")
+        except: log_debug("Gemini Key Error!")
 
     def calculate_rms(self, audio_data):
         try:
@@ -324,8 +324,8 @@ class BackendWorker(QThread):
 
     def run(self):
         self.signal_status.emit("thinking")
-        user_name = self.mem.get_value("isim")
-        greet = f"Tekrar merhaba {user_name}!" if user_name else "Merhaba!"
+        user_name = self.mem.get_value("name") or self.mem.get_value("isim")
+        greet = f"Hello again {user_name}!" if user_name else "Hello!"
         self.speak(greet)
         
         try:
@@ -337,20 +337,20 @@ class BackendWorker(QThread):
             stream = pa.open(rate=porcupine.sample_rate, channels=1, format=pyaudio.paInt16, input=True, frames_per_buffer=porcupine.frame_length)
             
             self.signal_status.emit("idle")
-            self.signal_text.emit("Uyku Modu...")
+            self.signal_text.emit("Sleeping Mode...")
 
             while self.running:
                 pcm = stream.read(porcupine.frame_length, exception_on_overflow=False)
                 self.signal_audio_level.emit(self.calculate_rms(pcm)) 
                 if porcupine.process(struct.unpack_from("h" * porcupine.frame_length, pcm)) >= 0:
-                    log_debug("Wake Word Algılandı!")
+                    log_debug("Wake Word Detected!")
                     self.active_listen()
                     self.signal_status.emit("idle")
-        except Exception as e: self.signal_text.emit(f"Hata: {e}")
+        except Exception as e: self.signal_text.emit(f"Error: {e}")
 
     def active_listen(self):
         self.signal_status.emit("listening")
-        self.signal_text.emit("Dinliyorum...")
+        self.signal_text.emit("Listening...")
         if pygame.mixer.music.get_busy(): pygame.mixer.music.set_volume(0.2)
 
         r = sr.Recognizer()
@@ -364,18 +364,18 @@ class BackendWorker(QThread):
                 audio = r.listen(source, timeout=5, phrase_time_limit=None)
                 
                 self.signal_status.emit("thinking")
-                self.signal_text.emit("Anlıyorum...")
+                self.signal_text.emit("Understanding...")
                 
-                command = r.recognize_google(audio, language="tr-TR")
+                command = r.recognize_google(audio, language="en-US")
                 log_debug(f"Google SR: {command}")
                 
                 if command: 
                     self.signal_text.emit(f"🗣️ {command}")
                     self.process_command(command)
-                else: self.speak("Anlayamadım.")
-            except sr.WaitTimeoutError: log_debug("Ses yok.")
-            except sr.UnknownValueError: self.speak("Seçemedim.")
-            except Exception as e: log_debug(f"Hata: {e}")
+                else: self.speak("Could not understand.")
+            except sr.WaitTimeoutError: log_debug("No audio.")
+            except sr.UnknownValueError: self.speak("Could not distinguish.")
+            except Exception as e: log_debug(f"Error: {e}")
             finally: self.signal_status.emit("idle")
         
         pygame.mixer.music.set_volume(1.0)
@@ -383,44 +383,44 @@ class BackendWorker(QThread):
     # --- PROCESS COMMAND ---
     def process_command(self, text):
         now = datetime.now().strftime("%d %B %Y %H:%M") 
-        user_name = self.mem.get_value("isim") or "Kullanıcı"
+        user_name = self.mem.get_value("name") or self.mem.get_value("isim") or "User"
         long_term_mem = self.mem.get_relevant_memories()
         short_term_ctx = self.ctx.get_context_string()
         
         prompt = f"""
-        [SİSTEM]
-        Senin adın Blink. {user_name} ile konuşuyorsun.
-        Şu anki zaman: {now}.
+        [SYSTEM]
+        Your name is Blink. You are talking to {user_name}.
+        Current time: {now}.
 
-        [MEVCUT HAFIZA]
+        [CURRENT MEMORY]
         {long_term_mem}
 
-        [SON KONUŞMA GEÇMİŞİ]
+        [RECENT CONVERSATION HISTORY]
         {short_term_ctx}
 
-        [GİRDİ]
-        Kullanıcı: "{text}"
+        [INPUT]
+        User: "{text}"
         
-        [GÖREV]
-        Kullanıcının cümlesini analiz et ve JSON oluştur.
+        [TASK]
+        Analyze the user's input and generate a JSON response.
         
-        [KRİTİK KURALLAR]
-        1. BAĞLAMSAL REFERANS:
-           - Kullanıcı "Buna uygun çal", "O nasıldı?", "Yarın nasıl?" derse geçmişe bak.
-           - Örn: "Moru severim" -> "Buna uygun çal" -> Target: "Mor temalı müzik".
+        [CRITICAL RULES]
+        1. CONTEXTUAL REFERENCE:
+           - If the user says "Play something matching this", "How was that?", "How is tomorrow?", look at the conversation history.
+           - E.g.: "I like purple" -> "Play something matching this" -> Target: "Purple themed music".
 
-        2. HATIRLATICI (Reminder):
-           - "10 saniye sonra", "1 saat sonra" -> type: "reminder".
-           - SÜREYİ SANİYE CİNSİNDEN HESAPLA. (Örn: 1 saat = 3600).
+        2. REMINDER:
+           - "in 10 seconds", "in 1 hour", "remind me in X" -> type: "reminder".
+           - CALCULATE THE DURATION IN SECONDS. (E.g.: 1 hour = 3600).
         
-        3. HAVA DURUMU (Weather):
-           - "Hava nasıl" -> type: "weather", Target: Şehir adı.
+        3. WEATHER:
+           - "how is the weather" -> type: "weather", Target: City name.
         
-        4. OLAYLAR (Events):
-           - "Yarın sunumum var" -> type: "memory", category: "events".
+        4. EVENTS:
+           - "I have a presentation tomorrow" -> type: "memory", category: "events".
         
         5. FALLBACK:
-           - "X aç" -> type: "app", target: "X". (Sistem bulamazsa müzik arayacaktır).
+           - "Open X" -> type: "app", target: "X". (If the system cannot find the app, it will search for music).
 
         FORMAT:
         {{
@@ -441,7 +441,7 @@ class BackendWorker(QThread):
         try:
             self.ctx.add("user", text)
             resp = self.ai.models.generate_content(model="gemini-3-flash-preview", contents=prompt).text
-            log_debug(f"AI Ham Cevap: {resp}")
+            log_debug(f"AI Raw Response: {resp}")
             
             clean_json = resp.replace("```json","").replace("```","").strip()
             if "```" in clean_json: clean_json = clean_json.split("```")[0]
@@ -449,7 +449,7 @@ class BackendWorker(QThread):
             data = json.loads(clean_json)
             queue = data.get("queue", [data] if "type" in data else [])
             
-            if not queue: self.speak("Anlamadım."); return
+            if not queue: self.speak("Could not understand."); return
 
             for cmd in queue:
                 self._execute_single_command(cmd, user_name)
@@ -458,7 +458,7 @@ class BackendWorker(QThread):
                 time.sleep(1.5)
             
         except Exception as e: 
-            log_debug(f"JSON/İşlem Hatası: {e}"); self.speak("Bir hata oldu.")
+            log_debug(f"JSON/Action Error: {e}"); self.speak("An error occurred.")
 
     def _execute_single_command(self, data, user_name):
         try:
@@ -467,31 +467,31 @@ class BackendWorker(QThread):
             action = data.get("action")
             response_text = data.get("response")
 
-            # --- 1. HATIRLATICI (TIMER FIX) ---
+            # --- 1. REMINDER (TIMER FIX) ---
             if typ == "reminder":
                 secs = data.get("seconds", 0)
-                msg = data.get("message", "Hatırlatma")
+                msg = data.get("message", "Reminder")
                 if secs > 0:
                     self.signal_start_timer.emit(secs, msg)
-                    self.speak(f"Tamam, {secs} saniye sonra hatırlatacağım.")
+                    self.speak(f"Okay, I will remind you in {secs} seconds.")
                 else:
-                    self.speak("Süreyi anlayamadım.")
+                    self.speak("Could not understand the duration.")
                 return
 
-            # --- 2. HAVA DURUMU ---
+            # --- 2. WEATHER ---
             if typ == "weather":
                 city = target if target else "Konya"
                 self.handle_weather_smart(city)
                 return
 
-            # --- 3. SİSTEM / PYTHON ---
+            # --- 3. SYSTEM / PYTHON ---
             if typ == "system" and action == "check_python":
                 versions_text = self.sys.check_python_versions()
                 self.speak(f"{response_text or ''} {versions_text}")
                 self.ctx.add("system", versions_text) 
                 return
 
-            # --- 4. MÜZİK ---
+            # --- 4. MUSIC ---
             if typ == "music":
                 if action == "stop":
                     self.music.stop(); self.signal_music_stop.emit()
@@ -508,54 +508,54 @@ class BackendWorker(QThread):
 
             if response_text: self.speak(response_text)
 
-            # --- 5. UYGULAMA (APP) + FALLBACK MANTIĞI ---
+            # --- 5. APPLICATION (APP) + FALLBACK LOGIC ---
             if typ == "app" and target:
                 result = self.sys.execute(action, target)
-                if "BULUNAMADI" in result:
-                    log_debug(f"App bulunamadı ({target}), müzik olarak deneniyor...")
-                    self.speak(f"{target} programını bulamadım, şarkı olarak çalıyorum.")
+                if "NOT FOUND" in result:
+                    log_debug(f"App not found ({target}), trying music instead...")
+                    self.speak(f"Could not find the application {target}, playing as a song instead.")
                     self.start_music_download(target)
                 else:
                     self.speak(result)
                 
-            # --- 6. HAFIZA ---
+            # --- 6. MEMORY ---
             elif typ == "memory":
                 k = data.get("key")
                 v = data.get("value") or target
                 cat = data.get("category", "general") 
                 if k and v: self.mem.save(k, v, cat)
 
-        except Exception as e: log_debug(f"Görev Hatası: {e}")
+        except Exception as e: log_debug(f"Task Error: {e}")
 
-    # --- HAVA DURUMU ---
+    # --- WEATHER ---
     def handle_weather_smart(self, city):
         try:
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
             }
-            url = f"https://wttr.in/{city}?format=%t|%C&lang=tr"
+            url = f"https://wttr.in/{city}?format=%t|%C&lang=en"
             
             response = requests.get(url, headers=headers, timeout=5)
             r = response.text.strip()
             
             if "|" not in r: 
-                self.speak(f"{city} için hava durumu alınamadı.")
+                self.speak(f"Could not retrieve weather for {city}.")
                 return
 
             temp_str, condition = r.split("|")
             temp = int(temp_str.replace("+", "").replace("°C", ""))
             
             suggestion = ""
-            if "rain" in condition.lower() or "yağmur" in condition.lower():
-                suggestion = "Şemsiye al."
+            if "rain" in condition.lower():
+                suggestion = "Take an umbrella."
             elif temp < 10:
-                suggestion = "Mont giy."
+                suggestion = "Wear a coat."
             elif 10 <= temp < 20:
-                suggestion = "Ceket al."
+                suggestion = "Take a jacket."
             elif temp >= 20:
-                suggestion = "Tişört giy."
+                suggestion = "Wear a t-shirt."
             
-            summary = f"{city} {temp} derece, {condition.lower()}. {suggestion}"
+            summary = f"{city} {temp} degrees, {condition.lower()}. {suggestion}"
             
             words = summary.split()
             if len(words) > 7: 
@@ -564,8 +564,8 @@ class BackendWorker(QThread):
             self.speak(summary)
 
         except Exception as e: 
-            log_debug(f"Hava Hatası: {e}")
-            self.speak("Hava durumu servisine ulaşamadım.")
+            log_debug(f"Weather Error: {e}")
+            self.speak("Could not reach the weather service.")
 
     def start_music_download(self, query):
         self.downloader = MusicDownloader(query)
@@ -576,7 +576,7 @@ class BackendWorker(QThread):
     def on_music_ready(self, meta):
         self.signal_music_start.emit(meta['title'], meta['thumbnail'], int(meta['duration']))
         self.music.play_file()
-        self.signal_text.emit("Çalıyor...")
+        self.signal_text.emit("Playing...")
 
     def process_manual_text(self, text):
         self.signal_status.emit("thinking")
@@ -595,7 +595,7 @@ class BackendWorker(QThread):
 
     async def _tts(self, text):
         try:
-            communicate = edge_tts.Communicate(text, "tr-TR-AhmetNeural")
+            communicate = edge_tts.Communicate(text, "en-US-AriaNeural")
             await communicate.save("tts.mp3")
             s = pygame.mixer.Sound("tts.mp3"); s.play()
             start = time.time()
@@ -610,7 +610,7 @@ class BackendWorker(QThread):
 class KeyInputWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Blink Kurulum")
+        self.setWindowTitle("Blink Setup")
         self.setFixedSize(400, 250)
         self.setStyleSheet("background-color: #121212; color: white;")
         layout = QVBoxLayout()
@@ -620,7 +620,7 @@ class KeyInputWindow(QWidget):
         form.addRow("Gemini API:", self.gemini_input)
         form.addRow("Picovoice Key:", self.picovoice_input)
         layout.addLayout(form)
-        self.btn = QPushButton("Kaydet"); self.btn.clicked.connect(self.save)
+        self.btn = QPushButton("Save"); self.btn.clicked.connect(self.save)
         self.btn.setStyleSheet("background: #1f6aa5; padding:8px;")
         layout.addWidget(self.btn)
         self.setLayout(layout)
@@ -629,7 +629,7 @@ class KeyInputWindow(QWidget):
         self.close(); self.main = BlinkOverlay(); self.main.show()
 
 # ==========================================================
-# 5. ANA UYGULAMA (BLINK UI)
+# 5. MAIN APPLICATION (BLINK UI)
 # ==========================================================
 class BlinkOverlay(QMainWindow):
     def __init__(self):
@@ -645,7 +645,7 @@ class BlinkOverlay(QMainWindow):
         self.viz = SiriVisualizerWidget()
         self.lay.addWidget(self.viz, alignment=Qt.AlignCenter)
 
-        self.lbl_text = QLabel("Başlatılıyor..."); 
+        self.lbl_text = QLabel("Initializing..."); 
         self.lbl_text.setStyleSheet("color: white; font: 13pt 'Segoe UI'; background: transparent;")
         self.lbl_text.setAlignment(Qt.AlignCenter); self.lbl_text.setWordWrap(True)
         self.lay.addWidget(self.lbl_text)
@@ -658,12 +658,12 @@ class BlinkOverlay(QMainWindow):
         h_lay = QHBoxLayout()
         self.img_cover = QLabel(); self.img_cover.setFixedSize(60, 60); self.img_cover.setStyleSheet("background: #333; border-radius: 5px;")
         h_lay.addWidget(self.img_cover)
-        self.lbl_song = QLabel("Şarkı Adı"); self.lbl_song.setStyleSheet("color: white; font-weight: bold; border: none; background: transparent;")
+        self.lbl_song = QLabel("Song Title"); self.lbl_song.setStyleSheet("color: white; font-weight: bold; border: none; background: transparent;")
         h_lay.addWidget(self.lbl_song)
         m_lay.addLayout(h_lay)
         self.slider = QSlider(Qt.Horizontal); self.slider.setStyleSheet("QSlider::handle:horizontal {background-color: #1f6aa5;}")
         self.slider.sliderReleased.connect(self.on_seek); m_lay.addWidget(self.slider)
-        self.btn_play = QPushButton("⏸ Durdur"); self.btn_play.clicked.connect(self.on_play_toggle)
+        self.btn_play = QPushButton("⏸ Pause"); self.btn_play.clicked.connect(self.on_play_toggle)
         self.btn_play.setStyleSheet("background: #1f6aa5; color: white; border: none; padding: 5px; border-radius: 5px;")
         m_lay.addWidget(self.btn_play)
         self.lay.addWidget(self.music_frame)
@@ -743,7 +743,7 @@ class BlinkOverlay(QMainWindow):
     def fade_out(self): self.fade_anim.stop(); self.fade_anim.setStartValue(self.windowOpacity()); self.fade_anim.setEndValue(0.0); self.fade_anim.start()
     def fade_in(self): self.fade_anim.stop(); self.fade_anim.setStartValue(self.windowOpacity()); self.fade_anim.setEndValue(1.0); self.fade_anim.start()
     def open_chat(self):
-        text, ok = QInputDialog.getText(self, "Blink Chat", "Komutun nedir?")
+        text, ok = QInputDialog.getText(self, "Blink Chat", "What is your command?")
         if ok and text: threading.Thread(target=self.worker.process_manual_text, args=(text,)).start()
     def mousePressEvent(self, e): self.old_pos = e.globalPos()
     def mouseMoveEvent(self, e):

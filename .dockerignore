@@ -1,0 +1,10 @@
+.git
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+blink_keys.json
+ffmpeg/
+tts.mp3
+temp_song.mp3
