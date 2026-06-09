@@ -16,26 +16,26 @@ Here is the Blink interface running in desktop HUD mode with the side-by-side ve
 
 ## Key Features
 
-### 💻 Glassmorphic Cyberpunk HUD
+### Glassmorphic Cyberpunk HUD
 * **HUD Overlay**: Seamless, frameless, and draggable window using `pywebview` with a gorgeous glassmorphic look.
 * **Dynamic Accent Color**: The interface glow and accent highlights transition dynamically based on assistant status (`SLEEPING`, `BOOTING`, `LISTENING`, `PROCESSING`, `SPEAKING`).
 * **Visualizer Orb centerpiece**: Breathing orb for idle states and responsive, imperative scale-easing to represent microphone audio levels in real time.
 
-### 🎤 Interactive Speech Pipeline
+### Interactive Speech Pipeline
 * **Wake-word detection**: Listens locally for the `"Hey Jarvis"` wake word.
 * **Speech-to-Text (STT)**: High-precision speech recognition utilizing the `faster-whisper-base` engine.
 * **Text-to-Speech (TTS)**: Realistic local speech synthesis using the Kokoro ONNX engine with automatic, graceful fallback to `pyttsx3` offline TTS if models are loading or unavailable.
 
-### 🎵 Vertical Sidebar Media Player
+### Vertical Sidebar Media Player
 * **Search Playlist Caching**: Searches YouTube for up to 10 matching results (`ytsearch10`) into an internal playlist.
 * **Transport Controls**: Skips tracks (`⏮` and `⏭`), pauses/resumes (`▶`/`⏸`), and stops (`⏹`) playback without waiting for LLM dispatch.
 * **Horizontal Volume & Seek Sliders**: Real-time position tracking and seek control.
 * **Equalizer Animation**: A responsive bouncing bar equalizer visualizer representing active playback states.
 * **Smart Column Layout**: Automatically slots in as a vertical sidebar on the right when music starts, and vanishes when stopped, preserving the dikey conversation scroll feed.
 
-### 🛡️ System Control & Safety Policy
+### System Control & Safety Policy
 * **Telemetry Monitors**: Readouts for CPU usage, RAM utilization, Disk space, and Battery charging status.
-* **System Commands**: Voice commands to adjust system volume, control screen brightness, toggle Wi-Fi and Bluetooth, lock the workstation, sleep, restart, or shutdown.
+* **System Commands**: Voice commands to adjust system volume, control screen brightness, toggle Wi-Fi and Bluetooth, lock the workstation, sleep, restart, or shutdown. (requires admin rights)
 * **Multi-Monitor Screenshots**: Multi-display virtual screen captures using Windows GDI, fully aware of DPI scaling boundaries.
 * **Safety Sandbox**: Command execution is disabled by default and runs sanitized shell executions without string interpolation.
 
